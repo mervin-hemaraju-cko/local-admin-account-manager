@@ -18,7 +18,7 @@ credentials on a Windows instance.
 4.  If not present, it will add it.
 
 5.  Finally, it will check if the credentials match the generally
-    defined local admin password.
+    defined local admin password. if it doesn't match, the script will reset the password to the generique one.
 
 ## How to use the Script?
 

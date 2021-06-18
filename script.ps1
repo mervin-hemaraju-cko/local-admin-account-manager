@@ -64,6 +64,13 @@ function IsPasswordCorrect($username) {
     
 }
 
+function ChangePassword($username) {
+    # Create a secure password
+    $LocalUserPassword = ConvertTo-SecureString $LocalAdminPassword -AsPlainText -Force
+
+    # Change the password
+    Get-LocalUser -Name $username | Set-LocalUser -Password $LocalUserPassword
+}
 
 ###############################################
 ################ Main Function ################
@@ -103,6 +110,7 @@ function Main {
         # Check if domain admin password
         if(!(IsPasswordCorrect($LocalUserName))){
             Write-Output "The password for Instance $env:COMPUTERNAME doesn't match the general local admin credentials"
+            ChangePassword($LocalUserName)
         }
     }
 
