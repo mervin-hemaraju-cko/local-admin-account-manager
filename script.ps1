@@ -5,7 +5,6 @@
 function AddUserToGroup($user, $group) {
     # Add user to the group
     Add-LocalGroupMember -Group $group -Member $user
-    
 }
 
 function IsUserInGroup($localuser, $users){
@@ -14,7 +13,7 @@ function IsUserInGroup($localuser, $users){
     foreach($User in $users)
     {   
         # Split computer domain and get name only
-        $Name = ($User.Name.Split("\"))[1]
+        $Name = ($User.Name.Split('\\'))[1]
         
         # Check if name is present
         if ($Name -eq $localuser) {
@@ -32,14 +31,16 @@ function CreateUserIfNotPresent($user, $groups) {
     # Checks if user account is present
     $LocalUser = Get-LocalUser $user -erroraction silentlycontinue
 
-    # If account if not present
+    # If account is not present
     if([string]::IsNullOrWhitespace($LocalUser)){
+
+        Write-Host 'Creating Local Admin Account...'
 
         # Create a password
         $LocalUserPassword = ConvertTo-SecureString $LocalAdminPassword -AsPlainText -Force
 
         # Create the user account   
-        New-LocalUser $user -Password $LocalUserPassword -FullName "CKO Administrator" -Description "This is the CKO Local Admin User"
+        New-LocalUser $user -Password $LocalUserPassword -FullName 'CKO Administrator' -Description 'This is the CKO Local Admin User'
 
         # Add user to all group needed
         foreach($Group in $groups){
@@ -78,12 +79,13 @@ function ChangePassword($username) {
 function Main {
 
     # Local Groups
-    $Groups = @("Administrators", "Remote Desktop Users")
+    $Groups = @('Administrators', 'Remote Desktop Users')
 
     Try {
 
         # Notify searching started
-        Write-Output "Searching for $LocalUserName in local users Database"
+        $TempMessage = 'Searching for {0} in Local Users Database' -f $LocalUserName
+        Write-Output $TempMessage
 
         # Checks if the user has already been created
         # If not, creates the user and add to groups
@@ -101,6 +103,10 @@ function Main {
             # Check if user is in group
             if(!$IsUserInGroup){
 
+                # Notify Adding to Group
+                $TempMessage = 'Adding user to group {0}' -f $Group
+                Write-Output $TempMessage
+
                 # If not in group, add it
                 AddUserToGroup $LocalUserName $Group
             }
@@ -109,13 +115,16 @@ function Main {
 
         # Check if domain admin password
         if(!(IsPasswordCorrect($LocalUserName))){
-            Write-Output "The password for Instance $env:COMPUTERNAME doesn't match the general local admin credentials"
+            $TempMessage = 'The password for Instance {0} does not match the general local admin credentials' -f $env:COMPUTERNAME
+            Write-Output $TempMessage
+            Write-Output 'Changing the password...'
+            
             ChangePassword($LocalUserName)
         }
     }
 
     Catch {
-        "An unspecifed error occured" | Write-Error
+        'An unspecifed error occured' | Write-Error
         Exit # Stop Powershell! 
     }
     
